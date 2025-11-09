@@ -1,10 +1,11 @@
-use axum::{routing::{get, post}, Json, Router};
-use serde::{Deserialize, Serialize};
+use axum::Router;
 use std::net::SocketAddr;
-use tower_http::trace::TraceLayer;
 use tracing;
 use tracing_subscriber::EnvFilter;
 use dotenvy::dotenv;
+
+mod routes;
+
 #[tokio::main]
 async fn main() {
     if let Err(e) = run().await {
@@ -25,11 +26,7 @@ async fn run()-> Result<(), Box<dyn std::error::Error>> {
     tracing::info!("start Logging successfully");
 
     // ルータ定義
-    let app: Router = Router::new()
-        .route("/health", get(health))
-        .route("/hello", get(hello))
-        .route("/echo", post(echo))
-        .layer(TraceLayer::new_for_http());
+    let app: Router = routes::router();
 
     // アドレス
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
@@ -40,33 +37,4 @@ async fn run()-> Result<(), Box<dyn std::error::Error>> {
     axum::serve(listener, app).await?;
 
     Ok(())
-}
-
-
-
-// ハンドラ（なんでもいいが文字列返却が一番シンプル）
-async fn health() -> &'static str {
-    "ok"
-}
-
-// JSON返すだけの例
-#[derive(Serialize)]
-struct HelloResponse {
-    message: String,
-}
-
-async fn hello() -> Json<HelloResponse> {
-    Json(HelloResponse {
-        message: "hello from axum".into(),
-    })
-}
-
-// JSON受け取って、そのまま返す例
-#[derive(Deserialize, Serialize)]
-struct EchoPayload {
-    text: String,
-}
-
-async fn echo(Json(payload): Json<EchoPayload>) -> Json<EchoPayload> {
-    Json(payload)
 }
