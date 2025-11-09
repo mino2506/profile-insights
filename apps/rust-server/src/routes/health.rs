@@ -1,3 +1,3 @@
-pub async fn handler() -> &'static str {
-    "ok"
+pub async fn handler() -> String {
+    "ok".to_string()
 }
