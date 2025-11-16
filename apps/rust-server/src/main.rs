@@ -3,6 +3,7 @@ use dotenvy::dotenv;
 use std::net::SocketAddr;
 use tracing_subscriber::EnvFilter;
 
+mod error;
 mod routes;
 
 #[tokio::main]
