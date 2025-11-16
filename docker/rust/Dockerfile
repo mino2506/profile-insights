@@ -11,8 +11,5 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends libopencv-dev \
   && rm -rf /var/lib/apt/lists/*
 
-# ホスト側のソースをマウント
-# VOLUME ["/apps/rust-server"]
-
 EXPOSE 3000
 CMD ["cargo", "watch", "-x", "run"]

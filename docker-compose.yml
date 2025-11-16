@@ -2,10 +2,33 @@ services:
   rust-server:
     user: "${UID}:${GID}"
     build:
-      context: .
-      dockerfile: docker/rust.Dockerfile
-    working_dir: /app
+      context: ./docker/rust
+    container_name: rust-api-server
+    environment:
+      RUST_LOG: rust_server=info,sqlx=warn # ログレベル設定
+      DB_HOST: pgvector-db # コンテナ内向けに固定してローカルと分離
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: ${DB_PORT}
+    working_dir: /app/apps/rust-server
     volumes:
-      - ./apps/rust-server:/app
+      - .:/app
     ports:
       - "3000:3000"
+  db:
+    build:
+      context: ./docker/postgres
+    container_name: pgvector-db
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./docker/postgres/initdb:/docker-entrypoint-initdb.d
+
+volumes:
+  pgdata:
