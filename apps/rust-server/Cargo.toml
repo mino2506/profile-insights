@@ -15,4 +15,6 @@ tower-http = { version = "0.6.6", features = ["trace"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter"] }
 db = { path = "../../crates/db" }
+storage = { path = "../../crates/storage" }
 sqlx = "0.8.6"
+tempfile = "3.23.0"

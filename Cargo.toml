@@ -1,6 +1,6 @@
 [workspace]
 members = [
     "apps/rust-server",
-    "crates/db",
+    "crates/db", "crates/storage",
 ]
 resolver = "2"
