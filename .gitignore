@@ -1,4 +1,11 @@
 **/*.env
 **/.env.*
 
+.sqlx/
+*.log
+
 /target/
+
+/local_data/*
+!local_data/.gitkeep
+!local_data/README.md

@@ -4,13 +4,34 @@ use dotenvy::dotenv;
 use std::net::SocketAddr;
 use tracing_subscriber::EnvFilter;
 
+use storage;
+
 mod config;
 mod error;
 mod migrate;
 mod routes;
 
+mod infra;
+
 #[tokio::main]
 async fn main() {
+    let json = infra::json_loader::load_json_file(
+        "local_data/profile_sources/wantedly/raw/20251123132822.json",
+    )
+    .expect("failed to load JSON file");
+
+    let node = json
+        .get("data")
+        .and_then(|d| d.get("profileImpressionPage"))
+        .and_then(|pi| pi.get("impressedUsers"))
+        .and_then(|iu| iu.get("edges"))
+        .and_then(|e| e.as_array())
+        .expect("invalid JSON structure: expected data.profileViews.nodes as array");
+
+    if let Some(first) = node.first() {
+        println!("{}", first);
+    }
+
     if let Err(e) = run().await {
         eprintln!("fatal error: {e}");
         std::process::exit(1);
