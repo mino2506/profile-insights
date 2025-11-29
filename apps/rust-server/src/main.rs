@@ -4,7 +4,9 @@ use dotenvy::dotenv;
 use std::net::SocketAddr;
 use tracing_subscriber::EnvFilter;
 
-use storage;
+use storage::wantedly::{
+    NewWantedlyProfileViewRaw, WantedlyProfileViewRawError, insert_profile_view_raw,
+};
 
 mod config;
 mod error;
@@ -15,23 +17,6 @@ mod infra;
 
 #[tokio::main]
 async fn main() {
-    let json = infra::json_loader::load_json_file(
-        "local_data/profile_sources/wantedly/raw/20251123132822.json",
-    )
-    .expect("failed to load JSON file");
-
-    let node = json
-        .get("data")
-        .and_then(|d| d.get("profileImpressionPage"))
-        .and_then(|pi| pi.get("impressedUsers"))
-        .and_then(|iu| iu.get("edges"))
-        .and_then(|e| e.as_array())
-        .expect("invalid JSON structure: expected data.profileViews.nodes as array");
-
-    if let Some(first) = node.first() {
-        println!("{}", first);
-    }
-
     if let Err(e) = run().await {
         eprintln!("fatal error: {e}");
         std::process::exit(1);
@@ -65,6 +50,39 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         .init();
 
     tracing::info!("start Logging successfully");
+
+    // Wantedlyのプロフィールビュー生データをJSONファイルから読み込み、DBに挿入する例
+    let json = infra::json_loader::load_json_file(
+        "local_data/profile_sources/wantedly/raw/20251123132822.json",
+    )
+    .expect("failed to load JSON file");
+
+    let node_vec = json
+        .get("data")
+        .and_then(|d| d.get("profileImpressionPage"))
+        .and_then(|pi| pi.get("impressedUsers"))
+        .and_then(|iu| iu.get("edges"))
+        .and_then(|e| e.as_array())
+        .expect("invalid JSON structure: expected data.profileViews.nodes as array");
+
+    for node in node_vec {
+        let new_profile_view: Result<NewWantedlyProfileViewRaw, WantedlyProfileViewRawError> =
+            NewWantedlyProfileViewRaw::from_node(
+                node.get("node").expect("missing node field"),
+                chrono::Utc::now(),
+            );
+        match new_profile_view {
+            Ok(profile_view) => {
+                println!("Parsed profile view: {:?}", profile_view);
+                if let Ok(inserted) = insert_profile_view_raw(&pool, &profile_view).await {
+                    println!("Inserted profile view with ID: {}", inserted);
+                }
+            }
+            Err(e) => {
+                eprintln!("Error parsing profile view: {}", e);
+            }
+        }
+    }
 
     // ルータ定義
     let app: Router = routes::router();

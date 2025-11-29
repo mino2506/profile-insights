@@ -18,3 +18,4 @@ db = { path = "../../crates/db" }
 storage = { path = "../../crates/storage" }
 sqlx = "0.8.6"
 tempfile = "3.23.0"
+chrono = "0.4.42"
