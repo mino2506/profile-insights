@@ -52,17 +52,11 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!("start Logging successfully");
 
     // Wantedlyのプロフィールビュー生データをJSONファイルから読み込み、DBに挿入する例
-    let json = infra::json_loader::load_json_file(
-        "local_data/profile_sources/wantedly/raw/20251123132822.json",
-    )
-    .expect("failed to load JSON file");
+    let path = "local_data/profile_sources/wantedly/raw/20251123132822.json";
 
-    let node_vec = json
-        .get("data")
-        .and_then(|d| d.get("profileImpressionPage"))
-        .and_then(|pi| pi.get("impressedUsers"))
-        .and_then(|iu| iu.get("edges"))
-        .and_then(|e| e.as_array())
+    let json = infra::json_loader::load_json_file(path).expect("failed to load JSON file");
+
+    let node_vec = infra::wantedly::json::extract_impressed_user_edges(&json)
         .expect("invalid JSON structure: expected data.profileViews.nodes as array");
 
     for node in node_vec {
