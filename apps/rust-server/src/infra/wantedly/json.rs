@@ -1,21 +1,23 @@
 use serde_json::Value;
 
 #[derive(Debug, thiserror::Error)]
-pub enum WantedlyJsonError {
+pub enum WantedlyJsonStructureError {
     #[error(
         "invalid JSON structure: expected data.profileImpressionPage.impressedUsers.edges as array"
     )]
     InvalidStructure,
 }
 
-pub fn extract_impressed_user_edges(json_value: &Value) -> Result<&Vec<Value>, WantedlyJsonError> {
+pub fn extract_impressed_user_edges(
+    json_value: &Value,
+) -> Result<&Vec<Value>, WantedlyJsonStructureError> {
     json_value
         .get("data")
         .and_then(|d| d.get("profileImpressionPage"))
         .and_then(|pi| pi.get("impressedUsers"))
         .and_then(|iu| iu.get("edges"))
         .and_then(|e| e.as_array())
-        .ok_or(WantedlyJsonError::InvalidStructure)
+        .ok_or(WantedlyJsonStructureError::InvalidStructure)
 }
 
 #[cfg(test)]
@@ -52,6 +54,9 @@ mod tests {
         });
 
         let result = extract_impressed_user_edges(&bad);
-        assert!(matches!(result, Err(WantedlyJsonError::InvalidStructure)));
+        assert!(matches!(
+            result,
+            Err(WantedlyJsonStructureError::InvalidStructure)
+        ));
     }
 }
