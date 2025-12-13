@@ -4,16 +4,14 @@ use dotenvy::dotenv;
 use std::net::SocketAddr;
 use tracing_subscriber::EnvFilter;
 
-use storage::wantedly::{
-    NewWantedlyProfileViewRaw, WantedlyProfileViewRawError, insert_profile_view_raw,
-};
-
 mod config;
 mod error;
 mod migrate;
 mod routes;
 
 mod infra;
+
+use infra::usecase::import_wantedly_profile_views::import_wantedly_profile_views_from_file;
 
 #[tokio::main]
 async fn main() {
@@ -54,36 +52,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     // Wantedlyのプロフィールビュー生データをJSONファイルから読み込み、DBに挿入する例
     let path = "local_data/profile_sources/wantedly/raw/20251123132822.json";
 
-    infra::usecase::import_wantedly_profile_views::import_wantedly_profile_views_from_file(
-        &pool,
-        path,
-        chrono::Utc::now(),
-    )
-    .await?;
-
-    // let json = infra::json_loader::load_json_file(path).expect("failed to load JSON file");
-
-    // let node_vec = infra::wantedly::json::extract_impressed_user_edges(&json)
-    //     .expect("invalid JSON structure: expected data.profileViews.nodes as array");
-
-    // for node in node_vec {
-    //     let new_profile_view: Result<NewWantedlyProfileViewRaw, WantedlyProfileViewRawError> =
-    //         NewWantedlyProfileViewRaw::from_node(
-    //             node.get("node").expect("missing node field"),
-    //             chrono::Utc::now(),
-    //         );
-    //     match new_profile_view {
-    //         Ok(profile_view) => {
-    //             println!("Parsed profile view: {:?}", profile_view);
-    //             if let Ok(inserted) = insert_profile_view_raw(&pool, &profile_view).await {
-    //                 println!("Inserted profile view with ID: {}", inserted);
-    //             }
-    //         }
-    //         Err(e) => {
-    //             eprintln!("Error parsing profile view: {}", e);
-    //         }
-    //     }
-    // }
+    import_wantedly_profile_views_from_file(&pool, path, chrono::Utc::now()).await?;
 
     // ルータ定義
     let app: Router = routes::router();

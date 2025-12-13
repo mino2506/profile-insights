@@ -4,10 +4,13 @@ CREATE TABLE wantedly_profile_view_raw (
     viewer_user_id          TEXT NOT NULL,  -- GQL node.userId
     viewer_company_page_url TEXT,           -- GQL node.companyPageUrl
     viewer_company_name_raw TEXT,           -- 生の会社名文字列
-    viewed_at_raw           TEXT NOT NULL,  -- 生の日時文字列（例: "11/21"）
+    viewed_at_raw           TEXT NOT NULL,  -- 生の日時文字列（例: "今日" "n日前"）
     viewed_at               TIMESTAMPTZ NOT NULL, -- パース済み日時
     raw_json                JSONB NOT NULL, -- 元の GQL node 全体
-    created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    
+    CONSTRAINT wantedly_profile_view_raw_uniq
+        UNIQUE (viewer_user_id, viewed_at)
 );
 
 -- Wantedly 会社の識別キー（URL / slug）

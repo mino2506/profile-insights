@@ -12,7 +12,7 @@ use crate::infra::{
     },
 };
 use storage::wantedly::{
-    NewWantedlyProfileViewRaw, WantedlyProfileViewRawError, insert_profile_view_raw,
+    NewWantedlyProfileViewRaw, WantedlyProfileViewRawError, upsert_profile_view_raw,
 };
 
 #[derive(Debug, Error)]
@@ -46,7 +46,8 @@ pub async fn import_one_profile_view(
     let storage_dto: NewWantedlyProfileViewRaw =
         convert_wantedly_json_node_to_storage(&profile_view_node, json_node.clone(), snapshot_at)?;
 
-    let inserted = insert_profile_view_raw(pool, &storage_dto).await?;
+    // let inserted = insert_profile_view_raw(pool, &storage_dto).await?;
+    let inserted = upsert_profile_view_raw(pool, &storage_dto).await?;
     Ok(inserted)
 }
 
